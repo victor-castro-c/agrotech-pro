@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrotech Pro - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS y JS (Motor del Mapa) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="flex h-screen bg-gray-50">
+        <!-- BARRA LATERAL -->
+        <aside class="w-64 bg-slate-900 text-white p-6 overflow-y-auto">
+            <h2 class="text-xl font-bold mb-10 text-green-400">Agrotech Pro</h2>
+            <nav class="space-y-3">
+                <button onclick="cargarContenido('resumen')" class="w-full text-left hover:text-green-400 font-medium">📊 Resumen General</button>
+                
+                <div class="pt-4 pb-1 text-xs text-gray-400 uppercase font-bold tracking-wider border-b border-gray-700">Operaciones Tácticas</div>
+                
+                <button onclick="cargarContenido('mapa_labores')" class="w-full text-left hover:text-green-400 text-sm pl-2 border-l-2 border-transparent hover:border-green-400">🚜 Labores (Tiempo Real)</button>
+                <button onclick="cargarContenido('mapa_sucesos')" class="w-full text-left hover:text-red-400 text-sm pl-2 border-l-2 border-transparent hover:border-red-400">🚨 Sucesos (Fitosanitario)</button>
+                
+                <div class="pt-4 pb-1 text-xs text-gray-400 uppercase font-bold tracking-wider border-b border-gray-700">Inteligencia y Estrategia</div>
+                
+                <button onclick="cargarContenido('mapa_productividad')" class="w-full text-left hover:text-blue-400 text-sm pl-2 border-l-2 border-transparent hover:border-blue-400">🗺️ Mapa de Productividad (Calor)</button>
+                
+                <div class="pt-4 pb-1 text-xs text-gray-400 uppercase font-bold tracking-wider border-b border-gray-700">Administración</div>
+                
+                <button onclick="cargarContenido('personal')" class="w-full text-left hover:text-green-400 text-sm pl-2 border-l-2 border-transparent hover:border-green-400">👥 Personal y Cuadrillas</button>
+            </nav>
+        </aside>
+
+        <!-- ÁREA PRINCIPAL -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <header class="flex justify-between mb-8">
+                <h1 id="tituloPagina" class="text-2xl font-bold uppercase text-gray-800">RESUMEN GENERAL</h1>
+                <button onclick="cerrarSesion()" class="text-red-500 font-bold hover:text-red-700">Cerrar Sesión</button>
+            </header>
+            
+            <div id="contenedorContenido" class="relative">
+                
+                <!-- ========================================== -->
+                <!-- HABITACIÓN 1: RESUMEN (Formulario y Tabla) -->
+                <!-- ========================================== -->
+                <div id="vista-resumen" class="vista-seccion block">
+                    <div class="flex flex-col items-center w-full">
+                        
+                        <!-- Tarjeta del Formulario -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-md border border-gray-200 mb-8">
+                            <div class="flex items-center justify-center mb-6">
+                                <span id="iconoPrincipal" class="text-3xl mr-2 transition-all duration-300">🍌</span>
+                                <h1 class="text-2xl font-bold text-gray-800">Agrotech Sullana</h1>
+                            </div>
+                            
+                            <p class="text-sm text-gray-500 mb-6 text-center font-semibold">Registro Manual de Operaciones</p>
+
+                            <form id="agrotechForm" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Cultivo</label>
+                                    <select id="cultivoSelect" onchange="cambiarIcono()" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                        <option value="Banano" data-icon="🍌">Banano / Plátano</option>
+                                        <option value="Mango" data-icon="🥭">Mango</option>
+                                        <option value="Limón" data-icon="🍋">Limón</option>
+                                        <option value="Palta" data-icon="🥑">Palta / Aguacate</option>
+                                        <option value="Uva" data-icon="🍇">Uva</option>
+                                        <option value="Arándano" data-icon="🫐">Arándano</option>
+                                        <option value="Otro" data-icon="🌱">Otro Cultivo</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Identificador del Lote / Sector</label>
+                                    <input type="text" id="loteInput" placeholder="Ej. Lote 101, Parcela A, Sector 5" required
+                                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Labor en Campo (Proceso del Banano)</label>
+                                    <select id="actividadInput" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                        <option value="Embolse">🟡 Embolse (Protección del racimo)</option>
+                                        <option value="Deshije">🟠 Deshije (Poda de brotes)</option>
+                                        <option value="Polinización">🟣 Polinización / Desflore</option>
+                                        <option value="Cosecha">🔵 Cosecha (Corte de racimo)</option>
+                                        <option value="Fitosanitario">🔴 Control Fitosanitario (Fumigación)</option>
+                                        <option value="Apuntalamiento">🟤 Apuntalamiento (Colocación de puntales)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Estado del Lote</label>
+                                    <select id="estadoSelect" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                        <option value="Saludable">Saludable</option>
+                                        <option value="En Proceso">En Proceso</option>
+                                        <option value="Atención Requerida">Atención Requerida</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" id="submitBtn" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition duration-200 shadow-md">
+                                    Registrar en Servidor (Nube)
+                                </button>
+                            </form>
+                            <div id="mensajeCaja" class="mt-4 hidden p-3 rounded-lg text-sm text-center font-medium"></div>
+                        </div>
+
+                        <!-- Tarjeta del Historial (Tabla) -->
+                        <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-4xl border border-gray-200">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                Tablero de Control Activo
+                            </h2>
+                            
+                            <div class="flex flex-wrap gap-2 mb-6" id="botonesFiltro">
+                                <button onclick="cargarHistorial('Todos')" id="btn-Todos" class="px-4 py-2 rounded-lg text-sm font-bold bg-green-600 text-white shadow transition-all">Mostrar Todos</button>
+                                <button onclick="cargarHistorial('En Proceso')" id="btn-En Proceso" class="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all">⏱️ En Proceso</button>
+                                <button onclick="cargarHistorial('Saludable')" id="btn-Saludable" class="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all">✅ Saludables</button>
+                                <button onclick="cargarHistorial('Atención Requerida')" id="btn-Atención Requerida" class="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all">🚨 Requieren Atención</button>
+                                
+                                <button onclick="cargarHistorial(filtroActual)" class="ml-auto px-4 py-2 rounded-lg text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 shadow transition-all">
+                                    🔄 Refrescar Tabla
+                                </button>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-sm text-left text-gray-500">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3">Fecha</th>
+                                            <th scope="col" class="px-6 py-3">Lote</th>
+                                            <th scope="col" class="px-6 py-3">Actividad</th>
+                                            <th scope="col" class="px-6 py-3">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaHistorial">
+                                        <tr class="bg-white border-b"><td colspan="4" class="px-6 py-4 text-center text-blue-600 font-bold animate-pulse">⚡ Conectando satélite con Brasil...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+               <!-- ========================================== -->
+                <!-- HABITACIÓN 2: MAPA DE LABORES              -->
+                <!-- ========================================== -->
+                <div id="vista-mapa_labores" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200 h-[600px] flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">🚜 Mapa Táctico de Operaciones</h2>
+                        
+                        <!-- NUEVO: Selector de Fecha -->
+                        <div class="flex items-center space-x-2 bg-gray-50 p-2 rounded border border-gray-200">
+                            <label class="text-sm font-bold text-gray-700">📅 Filtrar Día:</label>
+                            <input type="date" id="fechaFiltroMapa" onchange="dibujarMarcadoresEnMapa()" 
+                                class="p-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer">
+                        </div>
+                    </div>
+                    
+                    <div id="miMapaSat" class="w-full flex-1 rounded-lg border border-gray-300 z-10"></div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- HABITACIÓN 3.5: MAPA DE PRODUCTIVIDAD      -->
+                <!-- ========================================== -->
+                <div id="vista-mapa_productividad" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">🗺️ Rendimiento y Productividad</h2>
+                    <p class="text-gray-600">Este mapa pintará los lotes por colores basándose en los kilos cosechados por hectárea.</p>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- HABITACIÓN 3: MAPA DE SUCESOS              -->
+                <!-- ========================================== -->
+                <div id="vista-mapa_sucesos" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">🚨 Control Fitosanitario</h2>
+                    <p class="text-gray-600">Aquí veremos los reportes de Sigatoka, estrés hídrico y alertas de sanidad.</p>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- HABITACIÓN 4: PERSONAL                     -->
+                <!-- ========================================== -->
+                <div id="vista-personal" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">👥 Gestión de Cuadrillas</h2>
+                    <p class="text-gray-600">Módulo para administrar trabajadores y asignar tareas.</p>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- EL CEREBRO DE LA APLICACIÓN -->
+    <script>
+        const form = document.getElementById('agrotechForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const mensajeCaja = document.getElementById('mensajeCaja');
+        const tablaHistorial = document.getElementById('tablaHistorial');
+        const iconoPrincipal = document.getElementById('iconoPrincipal');
+
+        // Bóveda de memoria para guardar los datos y pintarlos en el mapa
+        let datosGlobales = []; 
+
+        function cambiarIcono() {
+            const select = document.getElementById('cultivoSelect');
+            const opcionSeleccionada = select.options[select.selectedIndex];
+            const nuevoIcono = opcionSeleccionada.getAttribute('data-icon');
+            iconoPrincipal.textContent = nuevoIcono;
+        }
+
+        function mostrarMensaje(texto, esError = false) {
+            mensajeCaja.textContent = texto;
+            mensajeCaja.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+            if(esError) {
+                mensajeCaja.classList.add('bg-red-100', 'text-red-800');
+            } else {
+                mensajeCaja.classList.add('bg-green-100', 'text-green-800');
+            }
+            setTimeout(() => { mensajeCaja.classList.add('hidden'); }, 5000);
+        }
+
+       const SUPABASE_URL = 'https://zbmeetlyskmzpuyocich.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_HRLg33-8mvD3cmoMDFfCpw_aF0hTg75';
+
+        // 1. EL GUARDIÁN: Lee la tarjeta de acceso del usuario
+        const tokenUsuario = localStorage.getItem('agrotech_token');
+        const idUsuario = localStorage.getItem('agrotech_user_id');
+
+        // Si alguien intenta entrar a dashboard.html sin haber iniciado sesión, ¡patada a index.html!
+        if (!tokenUsuario || !idUsuario) {
+            window.location.href = 'index.html';
+        }
+
+        // 2. Modificamos la cabecera para enviar el Token Personal en vez de la llave general
+        const cabeceras = {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + tokenUsuario, // <-- ¡MAGIA PURA!
+            'Content-Type': 'application/json'
+        };
+
+        let filtroActual = 'Todos';
+
+        async function cargarHistorial(filtro = 'Todos') {
+            filtroActual = filtro;
+            actualizarBotones(filtro);
+            
+            tablaHistorial.innerHTML = '<tr class="bg-white border-b"><td colspan="4" class="px-6 py-4 text-center text-blue-600 font-bold animate-pulse">⚡ Conectando satélite con Brasil...</td></tr>';
+
+            try {
+                let urlConsulta = `${SUPABASE_URL}/rest/v1/historial_tareas?select=*&order=fecha.desc`;
+                if (filtro !== 'Todos') {
+                    urlConsulta += `&estado=eq.${encodeURIComponent(filtro)}`;
+                }
+
+                const respuesta = await fetch(urlConsulta, { headers: cabeceras });
+                if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+
+                const data = await respuesta.json();
+                datosGlobales = data; // Guardamos los datos para el mapa
+                
+                tablaHistorial.innerHTML = '';
+
+                if (data.length === 0) {
+                    tablaHistorial.innerHTML = `<tr class="bg-white border-b"><td colspan="4" class="px-6 py-4 text-center text-gray-500 font-medium">No hay tareas registradas.</td></tr>`;
+                } else {
+                    data.forEach(fila => {
+                        const fechaFormateada = new Date(fila.fecha).toLocaleString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+                        
+                        let colorEstado = 'bg-green-100 text-green-800 border-green-200';
+                        if(fila.estado === 'En Proceso') colorEstado = 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                        if(fila.estado === 'Atención Requerida') colorEstado = 'bg-red-100 text-red-800 border-red-200';
+
+                        const tr = document.createElement('tr');
+                        tr.className = 'bg-white border-b hover:bg-gray-50';
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${fechaFormateada}</td>
+                            <td class="px-6 py-4 font-bold text-gray-800">${fila.lote}</td>
+                            <td class="px-6 py-4 text-gray-600">${fila.actividad}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold border ${colorEstado}">${fila.estado}</span>
+                            </td>
+                        `;
+                        tablaHistorial.appendChild(tr);
+                    });
+                }
+
+                // Actualizamos el mapa si está encendido
+                dibujarMarcadoresEnMapa();
+
+            } catch (error) {
+                console.error("Error:", error);
+                tablaHistorial.innerHTML = `<tr class="bg-white border-b"><td colspan="4" class="px-6 py-4 text-center text-red-600 font-bold">Error: ${error.message}</td></tr>`;
+            }
+        }
+
+        function actualizarBotones(filtroActivo) {
+            const botones = ['Todos', 'En Proceso', 'Saludable', 'Atención Requerida'];
+            botones.forEach(btnNombre => {
+                const boton = document.getElementById('btn-' + btnNombre);
+                if(boton) {
+                    if(btnNombre === filtroActivo) {
+                        boton.className = "px-4 py-2 rounded-lg text-sm font-bold bg-green-600 text-white shadow transition-all";
+                    } else {
+                        boton.className = "px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all";
+                    }
+                }
+            });
+        }
+
+        // =========================================================================
+        // MOTOR DEL MAPA SATELITAL (LEAFLET) DINÁMICO
+        // =========================================================================
+        let mapaLabores = null;
+        let capaMarcadores = null;
+
+        function obtenerColor(actividad) {
+            switch(actividad) {
+                case 'Embolse': return { c: '#a16207', f: '#eab308' }; // Amarillo
+                case 'Deshije': return { c: '#c2410c', f: '#f97316' }; // Naranja
+                case 'Polinización': return { c: '#6b21a8', f: '#a855f7' }; // Morado
+                case 'Cosecha': return { c: '#1d4ed8', f: '#3b82f6' }; // Azul
+                case 'Fitosanitario': return { c: '#dc2626', f: '#ef4444' }; // Rojo
+                case 'Apuntalamiento': return { c: '#713f12', f: '#a16207' }; // Marrón
+                default: return { c: '#16a34a', f: '#22c55e' }; // Verde
+            }
+        }
+
+       function dibujarMarcadoresEnMapa() {
+            if (!mapaLabores) return; 
+            
+            // Borramos los puntos viejos antes de dibujar los nuevos
+            if (capaMarcadores) mapaLabores.removeLayer(capaMarcadores);
+            capaMarcadores = L.layerGroup().addTo(mapaLabores);
+
+            let coordenadasParaEncuadre = []; 
+            
+            // Leemos qué fecha eligió el usuario en el calendario
+            const fechaSeleccionada = document.getElementById('fechaFiltroMapa').value;
+
+            datosGlobales.forEach(fila => {
+                // Lógica de filtrado temporal
+                let coincideFecha = true;
+                if (fechaSeleccionada) {
+                    // Supabase guarda "2026-07-17T18:52:15...". Cortamos todo después de la "T" para comparar solo el día.
+                    const fechaFila = fila.fecha.split('T')[0]; 
+                    if (fechaFila !== fechaSeleccionada) coincideFecha = false;
+                }
+
+                // Si tiene coordenadas válidas Y coincide con la fecha elegida, lo dibujamos
+                if (coincideFecha && fila.latitud !== null && fila.longitud !== null && fila.latitud !== undefined && fila.longitud !== undefined) {
+                    
+                    const latNum = parseFloat(fila.latitud);
+                    const lonNum = parseFloat(fila.longitud);
+
+                    if (!isNaN(latNum) && !isNaN(lonNum)) {
+                        const colores = obtenerColor(fila.actividad);
+                        
+                        L.circleMarker([latNum, lonNum], {
+                            color: colores.c, 
+                            fillColor: colores.f, 
+                            fillOpacity: 0.9, 
+                            radius: 8
+                        }).addTo(capaMarcadores)
+                          .bindPopup(`<b>${fila.lote}</b><br>Labor: <b>${fila.actividad}</b><br>Fecha: ${new Date(fila.fecha).toLocaleDateString('es-PE')}`);
+                        
+                        coordenadasParaEncuadre.push([latNum, lonNum]);
+                    }
+                }
+            });
+
+            // Auto-zoom (solo si hay puntos en la fecha seleccionada)
+            if (coordenadasParaEncuadre.length > 0) {
+                mapaLabores.fitBounds(coordenadasParaEncuadre, { padding: [50, 50], maxZoom: 18 });
+            }
+        }
+
+        function encenderMapa() {
+            if (mapaLabores !== null) {
+                setTimeout(() => mapaLabores.invalidateSize(), 100);
+                return;
+            }
+            mapaLabores = L.map('miMapaSat').setView([-4.896, -80.683], 15);
+            L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                attribution: '© Google'
+            }).addTo(mapaLabores);
+            
+            // NUEVO: Dibujar un Polígono de prueba simulando la Finca Principal
+            // Estas coordenadas encierran aproximadamente la zona de tu captura de pantalla
+            const perimetroFinca = [
+                [-4.9040, -80.7280], // Esquina Superior Izquierda
+                [-4.9040, -80.7210], // Esquina Superior Derecha
+                [-4.9090, -80.7210], // Esquina Inferior Derecha
+                [-4.9090, -80.7280]  // Esquina Inferior Izquierda
+            ];
+            
+            L.polygon(perimetroFinca, {
+                color: '#16a34a',     // Borde Verde
+                weight: 3,            // Grosor de línea
+                fillColor: '#22c55e', // Relleno verde
+                fillOpacity: 0.15     // Muy transparente para dejar ver el terreno
+            }).addTo(mapaLabores)
+              .bindPopup('<b>Perímetro: Finca Principal</b><br>Área delimitada de operaciones.');
+
+            dibujarMarcadoresEnMapa(); 
+        }
+
+        // =========================================================================
+        // CAPTURA DE GPS Y ENVÍO A SUPABASE
+        // =========================================================================
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            
+            const cultivoValor = document.getElementById('cultivoSelect').value;
+            const loteValorRaw = document.getElementById('loteInput').value;
+            const actividadValor = document.getElementById('actividadInput').value;
+            const estadoValor = document.getElementById('estadoSelect').value;
+            const loteCombinado = `${loteValorRaw} (${cultivoValor})`;
+
+            submitBtn.textContent = '📍 Obteniendo coordenadas satelitales...';
+            submitBtn.disabled = true;
+
+            // 1. Verificamos si el dispositivo tiene GPS
+            if (!navigator.geolocation) {
+                mostrarMensaje('Tu navegador no soporta geolocalización.', true);
+                restaurarBoton();
+                return;
+            }
+
+            // 2. Pedimos la ubicación de alta precisión
+            navigator.geolocation.getCurrentPosition(async (posicion) => {
+                const lat = posicion.coords.latitude;
+                const lon = posicion.coords.longitude;
+
+                try {
+                    submitBtn.textContent = 'Enviando telemetría a la Nube...';
+                    
+                   // Ensamblamos el paquete de datos con las coordenadas y el DUEÑO
+                    const datosAEnviar = { 
+                        lote: loteCombinado, 
+                        actividad: actividadValor, 
+                        estado: estadoValor,
+                        latitud: lat,
+                        longitud: lon,
+                        user_id: idUsuario // <-- Sellamos el dato con el ID del usuario
+                    };
+
+                    const respuesta = await fetch(`${SUPABASE_URL}/rest/v1/historial_tareas`, {
+                        method: 'POST',
+                        headers: { ...cabeceras, 'Prefer': 'return=minimal' },
+                        body: JSON.stringify(datosAEnviar)
+                    });
+
+                    if (!respuesta.ok) throw new Error(`Error HTTP: ${respuesta.status}`);
+
+                    mostrarMensaje('¡Operación registrada con coordenadas exactas!');
+                    document.getElementById('loteInput').value = '';
+                    
+                    // Recargamos la tabla (y los marcadores del mapa)
+                    cargarHistorial(filtroActual);
+
+                } catch (error) {
+                    console.error('Error detallado:', error);
+                    mostrarMensaje('Error: No se pudo registrar. ' + error.message, true);
+                } finally {
+                    restaurarBoton();
+                }
+
+            }, (error) => {
+                // Si el usuario deniega el permiso o el GPS falla
+                mostrarMensaje('No se pudo obtener el GPS. Verifica los permisos de tu navegador o celular.', true);
+                restaurarBoton();
+            }, { 
+                enableHighAccuracy: true // Forzamos la mejor precisión posible
+            });
+
+            function restaurarBoton() {
+                submitBtn.textContent = 'Registrar en Servidor (Nube)';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // =========================================================================
+        // NAVEGACIÓN Y ARRANQUE
+        // =========================================================================
+        function cargarContenido(seccion) {
+            const titulo = document.getElementById('tituloPagina');
+            titulo.innerText = seccion.toUpperCase().replace('_', ' ');
+
+            const todasLasVistas = document.querySelectorAll('.vista-seccion');
+            todasLasVistas.forEach(vista => {
+                vista.classList.add('hidden');
+                vista.classList.remove('block');
+            });
+
+            const vistaSeleccionada = document.getElementById('vista-' + seccion);
+            if (vistaSeleccionada) {
+                vistaSeleccionada.classList.remove('hidden');
+                vistaSeleccionada.classList.add('block');
+            }
+
+            if (seccion === 'mapa_labores') {
+                encenderMapa();
+            }
+        }
+
+       function cerrarSesion() {
+            localStorage.removeItem('agrotech_token');
+            localStorage.removeItem('agrotech_user_id');
+            window.location.href = 'index.html'; 
+        }
+
+        // Arrancamos la aplicación leyendo la base de datos
+        cargarHistorial();
+    </script>
+</body>
+</html>

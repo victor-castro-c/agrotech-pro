@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agrotech Pro - Acceso Restringido</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 h-screen flex items-center justify-center font-sans">
+
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md border-t-4 border-green-500">
+        <div class="text-center mb-8">
+            <div class="flex justify-center mb-4">
+                <span class="text-5xl">🍌</span> <!-- Mantenemos tu platanito original -->
+            </div>
+            <h1 class="text-3xl font-bold text-slate-900">Agrotech<span class="text-green-500">Pro</span></h1>
+            <p class="text-gray-500 text-sm mt-2">Plataforma de Inteligencia Agrícola</p>
+        </div>
+
+        <form id="loginForm" class="space-y-5">
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Correo Electrónico (Empresa)</label>
+                <input type="email" id="email" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" placeholder="admin@fundo.com">
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-1">Contraseña Táctica</label>
+                <input type="password" id="password" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" placeholder="••••••••">
+            </div>
+
+            <div id="mensajeAuth" class="hidden text-center text-sm font-bold p-2 rounded"></div>
+
+            <div class="flex space-x-3 pt-2">
+                <button type="button" onclick="iniciarSesion()" id="btnIngresar" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition">
+                    Ingresar
+                </button>
+                            </div>
+        </form>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://zbmeetlyskmzpuyocich.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_HRLg33-8mvD3cmoMDFfCpw_aF0hTg75';
+        const mensajeDiv = document.getElementById('mensajeAuth');
+
+        function mostrarMensaje(texto, esError = false) {
+            mensajeDiv.textContent = texto;
+            mensajeDiv.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
+            mensajeDiv.classList.add(esError ? 'bg-red-100' : 'bg-green-100', esError ? 'text-red-700' : 'text-green-700');
+        }
+
+        
+        // FUNCIÓN 2: INICIAR SESIÓN Y GENERAR PASE DE ENTRADA
+        async function iniciarSesion() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if(!email || !password) return mostrarMensaje('Llena todos los campos', true);
+            document.getElementById('btnIngresar').textContent = 'Verificando...';
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+                    method: 'POST',
+                    headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, password: password })
+                });
+                
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error_description || 'Credenciales inválidas');
+                
+                // GUARDAMOS EL PASE DE ENTRADA (TOKEN) Y EL ID DEL USUARIO EN LA MEMORIA DEL NAVEGADOR
+                localStorage.setItem('agrotech_token', data.access_token);
+                localStorage.setItem('agrotech_user_id', data.user.id);
+                
+                // Le abrimos la puerta al Dashboard
+                window.location.href = 'dashboard.html';
+
+            } catch (error) {
+                mostrarMensaje('Error: ' + error.message, true);
+            } finally {
+                document.getElementById('btnIngresar').textContent = 'Ingresar';
+            }
+        }
+    </script>
+</body>
+</html>
