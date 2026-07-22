@@ -33,7 +33,7 @@
                 <button type="button" onclick="iniciarSesion()" id="btnIngresar" class="w-full bg-slate-900 text-white font-bold py-3 rounded-lg hover:bg-slate-800 transition">
                     Ingresar
                 </button>
-                            </div>
+            </div>
         </form>
     </div>
 
@@ -48,8 +48,6 @@
             mensajeDiv.classList.add(esError ? 'bg-red-100' : 'bg-green-100', esError ? 'text-red-700' : 'text-green-700');
         }
 
-        
-        // FUNCIÓN 2: INICIAR SESIÓN Y GENERAR PASE DE ENTRADA
         async function iniciarSesion() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -58,6 +56,7 @@
             document.getElementById('btnIngresar').textContent = 'Verificando...';
 
             try {
+                // 1. INICIAR SESIÓN Y VALIDAR CREDENCIALES
                 const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
                     method: 'POST',
                     headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
@@ -67,16 +66,40 @@
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error_description || 'Credenciales inválidas');
                 
-                // GUARDAMOS EL PASE DE ENTRADA (TOKEN) Y EL ID DEL USUARIO EN LA MEMORIA DEL NAVEGADOR
+                // GUARDAMOS EL PASE DE ENTRADA (TOKEN) Y EL ID DEL USUARIO EN LA MEMORIA
                 localStorage.setItem('agrotech_token', data.access_token);
                 localStorage.setItem('agrotech_user_id', data.user.id);
-                
-                // Le abrimos la puerta al Dashboard
-                window.location.href = 'dashboard.html';
+
+                // 2. BUSCAR LA ORGANIZACIÓN Y ROL DEL USUARIO
+                try {
+                    const respMiembro = await fetch(`${SUPABASE_URL}/rest/v1/miembros?user_id=eq.${data.user.id}&select=organizacion_id,rol`, {
+                        headers: { 
+                            'apikey': SUPABASE_KEY, 
+                            'Authorization': `Bearer ${data.access_token}` 
+                        }
+                    });
+                    const dataMiembro = await respMiembro.json();
+
+                    if (dataMiembro && dataMiembro.length > 0) {
+                        // Guardamos la llave de la organización y el rol
+                        localStorage.setItem('agrotech_org_id', dataMiembro[0].organizacion_id);
+                        localStorage.setItem('agrotech_rol', dataMiembro[0].rol);
+                        
+                        // ¡Todo en orden! Abrimos la puerta al tablero principal
+                        window.location.href = 'dashboard.html';
+                    } else {
+                        mostrarMensaje('Acceso denegado: No perteneces a ninguna organización.', true);
+                        document.getElementById('btnIngresar').textContent = 'Ingresar';
+                    }
+                } catch (errorOrg) {
+                    console.error("Error al buscar organización:", errorOrg);
+                    mostrarMensaje('Error de conexión al verificar permisos.', true);
+                    document.getElementById('btnIngresar').textContent = 'Ingresar';
+                }
 
             } catch (error) {
-                mostrarMensaje('Error: ' + error.message, true);
-            } finally {
+                // ESTE CATCH ES EL QUE FALTABA PARA ATRAPAR ERRORES DE CONTRASEÑA
+                mostrarMensaje(error.message, true);
                 document.getElementById('btnIngresar').textContent = 'Ingresar';
             }
         }
