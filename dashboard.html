@@ -434,15 +434,17 @@
                 try {
                     submitBtn.textContent = 'Enviando telemetría a la Nube...';
                     
-                   // Ensamblamos el paquete de datos con las coordenadas y el DUEÑO
-                    const datosAEnviar = { 
-                        lote: loteCombinado, 
-                        actividad: actividadValor, 
-                        estado: estadoValor,
-                        latitud: lat,
-                        longitud: lon,
-                        user_id: idUsuario // <-- Sellamos el dato con el ID del usuario
-                    };
+                   // Así debe quedar tu objeto de datos antes de hacer el fetch a Supabase
+        const datosAEnviar = {
+            lote: loteCombinado, // (o el nombre que tengan tus variables actuales)
+            actividad: actividadValor,
+            estado: estadoValor,
+            latitud: lat,
+            longitud: lon,
+            user_id: localStorage.getItem('agrotech_user_id'),
+            // --- ESTA ES LA LÍNEA NUEVA VITAL ---
+            organizacion_id: localStorage.getItem('agrotech_org_id') 
+        };
 
                     const respuesta = await fetch(`${SUPABASE_URL}/rest/v1/historial_tareas`, {
                         method: 'POST',
@@ -503,9 +505,13 @@
             }
         }
 
-       function cerrarSesion() {
+      function cerrarSesion() {
             localStorage.removeItem('agrotech_token');
             localStorage.removeItem('agrotech_user_id');
+            // --- NUEVAS LLAVES A DESTRUIR AL SALIR ---
+            localStorage.removeItem('agrotech_org_id'); 
+            localStorage.removeItem('agrotech_rol');
+            
             window.location.href = 'index.html'; 
         }
 
