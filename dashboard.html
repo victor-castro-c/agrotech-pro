@@ -185,29 +185,18 @@
                 <div id="vista-configuracion" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200">
                     <h2 class="text-xl font-bold text-gray-800 mb-6">🛠️ Configuración Maestra de la Finca</h2>
                     
-                   <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <!-- MÓDULO DE LOTES (Ya lo tienes) -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- MÓDULO DE LOTES -->
                         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <!-- ... tu codigo de lotes ... -->
-                        </div>
-
-                        <!-- MÓDULO DE CULTIVOS (Ya lo tienes) -->
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <!-- ... tu codigo de cultivos ... -->
-                        </div>
-
-                        <!-- NUEVO: MÓDULO DE ACTIVIDADES -->
-                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <h3 class="font-bold text-lg mb-4 text-blue-700">Labores de Campo Oficiales</h3>
+                            <h3 class="font-bold text-lg mb-4 text-green-700">Lotes y Sectores Oficiales</h3>
                             <div class="flex gap-2 mb-4">
-                                <input type="text" id="nuevaActividadInput" placeholder="Ej. Embolse" class="flex-1 p-2 border border-gray-300 rounded outline-none focus:border-blue-500">
-                                <button onclick="guardarActividad()" class="bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700">Añadir</button>
+                                <input type="text" id="nuevoLoteInput" placeholder="Ej. Lote 101" class="flex-1 p-2 border border-gray-300 rounded outline-none focus:border-green-500">
+                                <button onclick="guardarLote()" class="bg-green-600 text-white px-4 py-2 rounded font-bold hover:bg-green-700">Añadir</button>
                             </div>
-                            <ul id="listaActividades" class="space-y-2">
-                                <li class="text-gray-500 text-sm">Cargando actividades...</li>
+                            <ul id="listaLotes" class="space-y-2">
+                                <li class="text-gray-500 text-sm">Cargando lotes...</li>
                             </ul>
                         </div>
-                    </div>
 
                         <!-- MÓDULO DE CULTIVOS -->
                         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
@@ -221,12 +210,20 @@
                                 <li class="text-gray-500 text-sm">Cargando cultivos...</li>
                             </ul>
                         </div>
+
+                        <!-- MÓDULO DE ACTIVIDADES -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="font-bold text-lg mb-4 text-blue-700">Labores de Campo Oficiales</h3>
+                            <div class="flex gap-2 mb-4">
+                                <input type="text" id="nuevaActividadInput" placeholder="Ej. Embolse" class="flex-1 p-2 border border-gray-300 rounded outline-none focus:border-blue-500">
+                                <button onclick="guardarActividad()" class="bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700">Añadir</button>
+                            </div>
+                            <ul id="listaActividades" class="space-y-2">
+                                <li class="text-gray-500 text-sm">Cargando actividades...</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-
-            </div>
-        </main>
-    </div>
 
     <!-- EL CEREBRO DE LA APLICACIÓN -->
     <script>
