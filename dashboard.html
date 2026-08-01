@@ -9,9 +9,6 @@
     <!-- Leaflet CSS y JS (Motor del Mapa) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Leaflet CSS y JS (Motor del Mapa) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <!-- NUEVO: El Guardián Visual (Apagón) -->
     <style>
@@ -39,11 +36,8 @@
                 <div class="pt-4 pb-1 text-xs text-gray-400 uppercase font-bold tracking-wider border-b border-gray-700">Administración</div>
                 
                 <button onclick="cargarContenido('personal')" class="w-full text-left hover:text-green-400 text-sm pl-2 border-l-2 border-transparent hover:border-green-400">👥 Personal y Cuadrillas</button>
-                <div class="pt-4 pb-1 text-xs text-gray-400 uppercase font-bold tracking-wider border-b border-gray-700">Administración</div>
                 
-                <button onclick="cargarContenido('personal')" class="w-full text-left hover:text-green-400 text-sm pl-2 border-l-2 border-transparent hover:border-green-400">👥 Personal y Cuadrillas</button>
-                
-                <!-- NUEVO BOTÓN DE MANDO -->
+                <!-- BOTÓN DE MANDO (CONFIGURACIÓN) -->
                 <button onclick="cargarContenido('configuracion')" class="w-full text-left hover:text-yellow-400 text-sm pl-2 border-l-2 border-transparent hover:border-yellow-400 mt-2">🛠️ Configuración de Finca</button>
             </nav>
         </aside>
@@ -157,7 +151,7 @@
                     </div>
                 </div>
 
-               <!-- ========================================== -->
+                <!-- ========================================== -->
                 <!-- HABITACIÓN 2: MAPA DE LABORES              -->
                 <!-- ========================================== -->
                 <div id="vista-mapa_labores" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200 h-[600px] flex flex-col">
@@ -176,7 +170,7 @@
                 </div>
 
                 <!-- ========================================== -->
-                <!-- HABITACIÓN 3.5: MAPA DE PRODUCTIVIDAD      -->
+                <!-- HABITACIÓN 3: MAPA DE PRODUCTIVIDAD        -->
                 <!-- ========================================== -->
                 <div id="vista-mapa_productividad" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">🗺️ Rendimiento y Productividad</h2>
@@ -184,7 +178,7 @@
                 </div>
 
                 <!-- ========================================== -->
-                <!-- HABITACIÓN 3: MAPA DE SUCESOS              -->
+                <!-- HABITACIÓN 4: MAPA DE SUCESOS              -->
                 <!-- ========================================== -->
                 <div id="vista-mapa_sucesos" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">🚨 Control Fitosanitario</h2>
@@ -192,7 +186,7 @@
                 </div>
 
                 <!-- ========================================== -->
-                <!-- HABITACIÓN 4: PERSONAL                     -->
+                <!-- HABITACIÓN 5: PERSONAL                     -->
                 <!-- ========================================== -->
                 <div id="vista-personal" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">👥 Gestión de Cuadrillas</h2>
@@ -200,7 +194,7 @@
                 </div>
 
                 <!-- ========================================== -->
-                <!-- HABITACIÓN 5: CONFIGURACIÓN DE FINCA       -->
+                <!-- HABITACIÓN 6: CONFIGURACIÓN DE FINCA       -->
                 <!-- ========================================== -->
                 <div id="vista-configuracion" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200">
                     <h2 class="text-xl font-bold text-gray-800 mb-6">🛠️ Configuración Maestra de la Finca</h2>
@@ -277,15 +271,12 @@
         // 🛡️ GUARDIÁN DE RUTA TÁCTICO (VERIFICACIÓN EN BÓVEDA)
         // ==========================================
         async function blindarAcceso() {
-            // 1. Revisión visual rápida
             if (!tokenUsuario || !idUsuario) {
                 localStorage.clear();
                 window.location.replace('index.html');
                 return;
             }
-
             try {
-                // 2. Llamada directa a Supabase para validar la criptografía de la credencial
                 const respuesta = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
                     method: 'GET',
                     headers: {
@@ -293,25 +284,18 @@
                         'Authorization': `Bearer ${tokenUsuario}`
                     }
                 });
-
-                // 3. Si Supabase detecta que es falso, anónimo o inventado
                 if (!respuesta.ok) {
                     console.warn("Brecha detectada. Expulsando del perímetro...");
                     localStorage.clear();
                     window.location.replace('index.html');
                     return;
                 }
-
-                // 4. Si la central aprueba la identidad, encendemos las luces visuales
                 document.body.style.display = 'block';
-                
             } catch (err) {
                 localStorage.clear();
                 window.location.replace('index.html');
             }
         }
-
-        // Ejecutamos el guardián inmediatamente
         blindarAcceso();
 
         // 2. Modificamos la cabecera para enviar el Token Personal en vez de la llave general
@@ -366,8 +350,6 @@
                         tablaHistorial.appendChild(tr);
                     });
                 }
-
-                // Actualizamos el mapa si está encendido
                 dibujarMarcadoresEnMapa();
 
             } catch (error) {
@@ -416,22 +398,16 @@
             capaMarcadores = L.layerGroup().addTo(mapaLabores);
 
             let coordenadasParaEncuadre = []; 
-            
-            // Leemos qué fecha eligió el usuario en el calendario
             const fechaSeleccionada = document.getElementById('fechaFiltroMapa').value;
 
             datosGlobales.forEach(fila => {
-                // Lógica de filtrado temporal
                 let coincideFecha = true;
                 if (fechaSeleccionada) {
-                    // Supabase guarda "2026-07-17T18:52:15...". Cortamos todo después de la "T" para comparar solo el día.
                     const fechaFila = fila.fecha.split('T')[0]; 
                     if (fechaFila !== fechaSeleccionada) coincideFecha = false;
                 }
 
-                // Si tiene coordenadas válidas Y coincide con la fecha elegida, lo dibujamos
                 if (coincideFecha && fila.latitud !== null && fila.longitud !== null && fila.latitud !== undefined && fila.longitud !== undefined) {
-                    
                     const latNum = parseFloat(fila.latitud);
                     const lonNum = parseFloat(fila.longitud);
 
@@ -451,7 +427,6 @@
                 }
             });
 
-            // Auto-zoom (solo si hay puntos en la fecha seleccionada)
             if (coordenadasParaEncuadre.length > 0) {
                 mapaLabores.fitBounds(coordenadasParaEncuadre, { padding: [50, 50], maxZoom: 18 });
             }
@@ -468,22 +443,13 @@
                 attribution: '© Google'
             }).addTo(mapaLabores);
             
-            // NUEVO: Dibujar un Polígono de prueba simulando la Finca Principal
-            // Estas coordenadas encierran aproximadamente la zona de tu captura de pantalla
             const perimetroFinca = [
-                [-4.9040, -80.7280], // Esquina Superior Izquierda
-                [-4.9040, -80.7210], // Esquina Superior Derecha
-                [-4.9090, -80.7210], // Esquina Inferior Derecha
-                [-4.9090, -80.7280]  // Esquina Inferior Izquierda
+                [-4.9040, -80.7280], [-4.9040, -80.7210], [-4.9090, -80.7210], [-4.9090, -80.7280] 
             ];
             
             L.polygon(perimetroFinca, {
-                color: '#16a34a',     // Borde Verde
-                weight: 3,            // Grosor de línea
-                fillColor: '#22c55e', // Relleno verde
-                fillOpacity: 0.15     // Muy transparente para dejar ver el terreno
-            }).addTo(mapaLabores)
-              .bindPopup('<b>Perímetro: Finca Principal</b><br>Área delimitada de operaciones.');
+                color: '#16a34a', weight: 3, fillColor: '#22c55e', fillOpacity: 0.15 
+            }).addTo(mapaLabores).bindPopup('<b>Perímetro: Finca Principal</b><br>Área delimitada de operaciones.');
 
             dibujarMarcadoresEnMapa(); 
         }
@@ -503,14 +469,12 @@
             submitBtn.textContent = '📍 Obteniendo coordenadas satelitales...';
             submitBtn.disabled = true;
 
-            // 1. Verificamos si el dispositivo tiene GPS
             if (!navigator.geolocation) {
                 mostrarMensaje('Tu navegador no soporta geolocalización.', true);
                 restaurarBoton();
                 return;
             }
 
-            // 2. Pedimos la ubicación de alta precisión
             navigator.geolocation.getCurrentPosition(async (posicion) => {
                 const lat = posicion.coords.latitude;
                 const lon = posicion.coords.longitude;
@@ -518,15 +482,13 @@
                 try {
                     submitBtn.textContent = 'Enviando telemetría a la Nube...';
                     
-                   // Así debe quedar tu objeto de datos antes de hacer el fetch a Supabase
         const datosAEnviar = {
-            lote: loteCombinado, // (o el nombre que tengan tus variables actuales)
+            lote: loteCombinado,
             actividad: actividadValor,
             estado: estadoValor,
             latitud: lat,
             longitud: lon,
             user_id: localStorage.getItem('agrotech_user_id'),
-            // --- ESTA ES LA LÍNEA NUEVA VITAL ---
             organizacion_id: localStorage.getItem('agrotech_org_id') 
         };
 
@@ -541,7 +503,6 @@
                     mostrarMensaje('¡Operación registrada con coordenadas exactas!');
                     document.getElementById('loteInput').value = '';
                     
-                    // Recargamos la tabla (y los marcadores del mapa)
                     cargarHistorial(filtroActual);
 
                 } catch (error) {
@@ -552,12 +513,9 @@
                 }
 
             }, (error) => {
-                // Si el usuario deniega el permiso o el GPS falla
                 mostrarMensaje('No se pudo obtener el GPS. Verifica los permisos de tu navegador o celular.', true);
                 restaurarBoton();
-            }, { 
-                enableHighAccuracy: true // Forzamos la mejor precisión posible
-            });
+            }, { enableHighAccuracy: true });
 
             function restaurarBoton() {
                 submitBtn.textContent = 'Registrar en Servidor (Nube)';
@@ -589,10 +547,9 @@
             }
         }
 
-     function cerrarSesion() {
+      function cerrarSesion() {
             localStorage.removeItem('agrotech_token');
             localStorage.removeItem('agrotech_user_id');
-            // --- NUEVAS LLAVES A DESTRUIR AL SALIR ---
             localStorage.removeItem('agrotech_org_id'); 
             localStorage.removeItem('agrotech_rol');
             
@@ -604,14 +561,13 @@
         // ==========================================
         const orgId = localStorage.getItem('agrotech_org_id');
 
-        // Cargar listas al entrar
         async function cargarConfiguracionOficial() {
             try {
                 // Cargar Lotes
                 let resLotes = await fetch(`${SUPABASE_URL}/rest/v1/lotes?organizacion_id=eq.${orgId}&order=creado_en.desc`, { headers: cabeceras });
                 let lotes = await resLotes.json();
                 document.getElementById('listaLotes').innerHTML = lotes.map(l => 
-                    `<li class="flex justify-between bg-white p-2 border rounded shadow-sm">
+                    `<li class="flex justify-between items-center bg-white p-2 border rounded shadow-sm">
                         <span class="font-bold text-gray-700">${l.nombre}</span>
                         <button onclick="eliminarRegistro('lotes', '${l.id}')" class="text-red-500 hover:text-red-700">❌</button>
                     </li>`
@@ -621,7 +577,7 @@
                 let resCultivos = await fetch(`${SUPABASE_URL}/rest/v1/cultivos?organizacion_id=eq.${orgId}&order=creado_en.desc`, { headers: cabeceras });
                 let cultivos = await resCultivos.json();
                 document.getElementById('listaCultivos').innerHTML = cultivos.map(c => 
-                    `<li class="flex justify-between bg-white p-2 border rounded shadow-sm">
+                    `<li class="flex justify-between items-center bg-white p-2 border rounded shadow-sm">
                         <span class="font-bold text-gray-700">${c.icono} ${c.nombre}</span>
                         <button onclick="eliminarRegistro('cultivos', '${c.id}')" class="text-red-500 hover:text-red-700">❌</button>
                     </li>`
@@ -632,7 +588,6 @@
             }
         }
 
-        // Guardar nuevo Lote (Solo Admin)
         async function guardarLote() {
             const nombre = document.getElementById('nuevoLoteInput').value;
             if(!nombre) return;
@@ -653,7 +608,6 @@
             }
         }
 
-        // Guardar nuevo Cultivo (Solo Admin)
         async function guardarCultivo() {
             const nombre = document.getElementById('nuevoCultivoInput').value;
             const icono = document.getElementById('nuevoIconoInput').value || '🌱';
@@ -676,7 +630,6 @@
             }
         }
 
-        // Eliminar registro
         async function eliminarRegistro(tabla, id) {
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/${tabla}?id=eq.${id}`, {
@@ -690,7 +643,7 @@
             }
         }
 
-        // Modificamos ligeramente tu función cargarContenido para que lea los datos al abrir la pestaña
+        // Modificamos ligeramente la función cargarContenido para que lea los datos al abrir la pestaña
         const originalCargarContenido = cargarContenido;
         cargarContenido = function(seccion) {
             originalCargarContenido(seccion);
