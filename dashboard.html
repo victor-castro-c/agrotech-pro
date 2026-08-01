@@ -9,6 +9,14 @@
     <!-- Leaflet CSS y JS (Motor del Mapa) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Leaflet CSS y JS (Motor del Mapa) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- NUEVO: El Guardián Visual (Apagón) -->
+    <style>
+        body { display: none; }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans">
 
@@ -219,16 +227,52 @@
         }
 
        const SUPABASE_URL = 'https://zbmeetlyskmzpuyocich.supabase.co';
-       const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpibWVldGx5c2ttenB1eW9jaWNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5OTE1MTcsImV4cCI6MjA5OTU2NzUxN30.NGQGrAs2g1sDTALhPvVZvd5HPrYrjOXNiKC_LQyRUhg';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpibWVldGx5c2ttenB1eW9jaWNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM5OTE1MTcsImV4cCI6MjA5OTU2NzUxN30.NGQGrAs2g1sDTALhPvVZvd5HPrYrjOXNiKC_LQyRUhg';
 
-        // 1. EL GUARDIÁN: Lee la tarjeta de acceso del usuario
+        // Variables globales que usará el resto del código
         const tokenUsuario = localStorage.getItem('agrotech_token');
         const idUsuario = localStorage.getItem('agrotech_user_id');
 
-        // Si alguien intenta entrar a dashboard.html sin haber iniciado sesión, ¡patada a index.html!
-        if (!tokenUsuario || !idUsuario) {
-            window.location.href = 'index.html';
+        // ==========================================
+        // 🛡️ GUARDIÁN DE RUTA TÁCTICO (VERIFICACIÓN EN BÓVEDA)
+        // ==========================================
+        async function blindarAcceso() {
+            // 1. Revisión visual rápida
+            if (!tokenUsuario || !idUsuario) {
+                localStorage.clear();
+                window.location.replace('index.html');
+                return;
+            }
+
+            try {
+                // 2. Llamada directa a Supabase para validar la criptografía de la credencial
+                const respuesta = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${tokenUsuario}`
+                    }
+                });
+
+                // 3. Si Supabase detecta que es falso, anónimo o inventado
+                if (!respuesta.ok) {
+                    console.warn("Brecha detectada. Expulsando del perímetro...");
+                    localStorage.clear();
+                    window.location.replace('index.html');
+                    return;
+                }
+
+                // 4. Si la central aprueba la identidad, encendemos las luces visuales
+                document.body.style.display = 'block';
+                
+            } catch (err) {
+                localStorage.clear();
+                window.location.replace('index.html');
+            }
         }
+
+        // Ejecutamos el guardián inmediatamente
+        blindarAcceso();
 
         // 2. Modificamos la cabecera para enviar el Token Personal en vez de la llave general
         const cabeceras = {
