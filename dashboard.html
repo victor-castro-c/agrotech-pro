@@ -64,33 +64,23 @@
 
                             <form id="agrotechForm" class="space-y-4">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Cultivo</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Cultivo Oficial</label>
                                     <select id="cultivoSelect" onchange="cambiarIcono()" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
-                                        <option value="Banano" data-icon="🍌">Banano / Plátano</option>
-                                        <option value="Mango" data-icon="🥭">Mango</option>
-                                        <option value="Limón" data-icon="🍋">Limón</option>
-                                        <option value="Palta" data-icon="🥑">Palta / Aguacate</option>
-                                        <option value="Uva" data-icon="🍇">Uva</option>
-                                        <option value="Arándano" data-icon="🫐">Arándano</option>
-                                        <option value="Otro" data-icon="🌱">Otro Cultivo</option>
+                                        <option value="">Cargando cultivos...</option>
                                     </select>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Identificador del Lote / Sector</label>
-                                    <input type="text" id="loteInput" placeholder="Ej. Lote 101, Parcela A, Sector 5" required
-                                        class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Sector / Lote Oficial</label>
+                                    <select id="loteSelect" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+                                        <option value="">Cargando lotes...</option>
+                                    </select>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Labor en Campo (Proceso del Banano)</label>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Labor en Campo Oficial</label>
                                     <select id="actividadInput" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
-                                        <option value="Embolse">🟡 Embolse (Protección del racimo)</option>
-                                        <option value="Deshije">🟠 Deshije (Poda de brotes)</option>
-                                        <option value="Polinización">🟣 Polinización / Desflore</option>
-                                        <option value="Cosecha">🔵 Cosecha (Corte de racimo)</option>
-                                        <option value="Fitosanitario">🔴 Control Fitosanitario (Fumigación)</option>
-                                        <option value="Apuntalamiento">🟤 Apuntalamiento (Colocación de puntales)</option>
+                                        <option value="">Cargando labores...</option>
                                     </select>
                                 </div>
 
@@ -195,18 +185,29 @@
                 <div id="vista-configuracion" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200">
                     <h2 class="text-xl font-bold text-gray-800 mb-6">🛠️ Configuración Maestra de la Finca</h2>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <!-- MÓDULO DE LOTES -->
+                   <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- MÓDULO DE LOTES (Ya lo tienes) -->
                         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <h3 class="font-bold text-lg mb-4 text-green-700">Lotes y Sectores Oficiales</h3>
+                            <!-- ... tu codigo de lotes ... -->
+                        </div>
+
+                        <!-- MÓDULO DE CULTIVOS (Ya lo tienes) -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <!-- ... tu codigo de cultivos ... -->
+                        </div>
+
+                        <!-- NUEVO: MÓDULO DE ACTIVIDADES -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="font-bold text-lg mb-4 text-blue-700">Labores de Campo Oficiales</h3>
                             <div class="flex gap-2 mb-4">
-                                <input type="text" id="nuevoLoteInput" placeholder="Ej. Lote 101" class="flex-1 p-2 border border-gray-300 rounded outline-none focus:border-green-500">
-                                <button onclick="guardarLote()" class="bg-green-600 text-white px-4 py-2 rounded font-bold hover:bg-green-700">Añadir</button>
+                                <input type="text" id="nuevaActividadInput" placeholder="Ej. Embolse" class="flex-1 p-2 border border-gray-300 rounded outline-none focus:border-blue-500">
+                                <button onclick="guardarActividad()" class="bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700">Añadir</button>
                             </div>
-                            <ul id="listaLotes" class="space-y-2">
-                                <li class="text-gray-500 text-sm">Cargando lotes...</li>
+                            <ul id="listaActividades" class="space-y-2">
+                                <li class="text-gray-500 text-sm">Cargando actividades...</li>
                             </ul>
                         </div>
+                    </div>
 
                         <!-- MÓDULO DE CULTIVOS -->
                         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
@@ -457,7 +458,7 @@
             e.preventDefault(); 
             
             const cultivoValor = document.getElementById('cultivoSelect').value;
-            const loteValorRaw = document.getElementById('loteInput').value;
+            const loteValorRaw = document.getElementById('loteSelect').value;
             const actividadValor = document.getElementById('actividadInput').value;
             const estadoValor = document.getElementById('estadoSelect').value;
             const loteCombinado = `${loteValorRaw} (${cultivoValor})`;
@@ -582,6 +583,9 @@
             } catch (error) {
                 console.error("Error cargando configuración:", error);
             }
+            let resActividades = await fetch(`${SUPABASE_URL}/rest/v1/actividades?organizacion_id=eq.${orgId}&order=creado_en.desc`, { headers: cabeceras });
+                let actividades = await resActividades.json();
+                document.getElementById('listaActividades').innerHTML = actividades.map(a => `<li class="flex justify-between items-center bg-white p-2 border rounded shadow-sm"><span class="font-bold text-gray-700">${a.nombre}</span><button onclick="eliminarRegistro('actividades', '${a.id}')" class="text-red-500 hover:text-red-700">❌</button></li>`).join('') || '<li class="text-gray-500 text-sm">No hay labores.</li>';
         }
 
         async function guardarLote() {
@@ -625,6 +629,21 @@
                 mostrarMensaje(error.message, true);
             }
         }
+        async function guardarActividad() {
+            const nombre = document.getElementById('nuevaActividadInput').value;
+            if(!nombre) return;
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/actividades`, {
+                    method: 'POST',
+                    headers: cabeceras,
+                    body: JSON.stringify({ nombre: nombre, organizacion_id: orgId })
+                });
+                if (!res.ok) throw new Error("Acceso denegado.");
+                document.getElementById('nuevaActividadInput').value = '';
+                cargarConfiguracionOficial();
+                mostrarMensaje("Labor registrada oficialmente.");
+            } catch (error) { mostrarMensaje(error.message, true); }
+        }
 
         async function eliminarRegistro(tabla, id) {
             try {
@@ -645,9 +664,47 @@
             originalCargarContenido(seccion);
             if(seccion === 'configuracion') cargarConfiguracionOficial();
         };
+        // ==========================================
+        // 🔄 MOTOR DE SINCRONIZACIÓN DEL FORMULARIO
+        // ==========================================
+        async function cargarOpcionesDelFormulario() {
+            try {
+                // Descargar y pintar Cultivos
+                let resCultivos = await fetch(`${SUPABASE_URL}/rest/v1/cultivos?organizacion_id=eq.${orgId}&order=creado_en.asc`, { headers: cabeceras });
+                let cultivos = await resCultivos.json();
+                const selectCultivo = document.getElementById('cultivoSelect');
+                
+                if(cultivos.length > 0) {
+                    selectCultivo.innerHTML = cultivos.map(c => `<option value="${c.nombre}" data-icon="${c.icono}">${c.icono} ${c.nombre}</option>`).join('');
+                    cambiarIcono(); // Actualiza el dibujo de la fruta grande
+                } else {
+                    selectCultivo.innerHTML = '<option value="">(Pídele al Admin que configure cultivos)</option>';
+                }
+
+                // Descargar y pintar Lotes
+                let resLotes = await fetch(`${SUPABASE_URL}/rest/v1/lotes?organizacion_id=eq.${orgId}&order=creado_en.asc`, { headers: cabeceras });
+                let lotes = await resLotes.json();
+                const selectLote = document.getElementById('loteSelect');
+                
+                if(lotes.length > 0) {
+                    selectLote.innerHTML = lotes.map(l => `<option value="${l.nombre}">${l.nombre}</option>`).join('');
+                } else {
+                    selectLote.innerHTML = '<option value="">(Pídele al Admin que configure lotes)</option>';
+                }
+
+            } catch (error) {
+                console.error("Error sincronizando opciones:", error);
+            }
+            let resAct = await fetch(`${SUPABASE_URL}/rest/v1/actividades?organizacion_id=eq.${orgId}&order=creado_en.asc`, { headers: cabeceras });
+                let acts = await resAct.json();
+                const selectAct = document.getElementById('actividadInput');
+                if(acts.length > 0) { selectAct.innerHTML = acts.map(a => `<option value="${a.nombre}">${a.nombre}</option>`).join(''); } 
+                else { selectAct.innerHTML = '<option value="">(Pide al Admin que agregue labores)</option>'; }
+        }
 
         // Arrancamos la aplicación leyendo la base de datos
         cargarHistorial();
+        cargarOpcionesDelFormulario();
     </script>
 </body>
 </html>
