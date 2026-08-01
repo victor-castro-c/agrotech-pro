@@ -39,6 +39,12 @@
                 <div class="pt-4 pb-1 text-xs text-gray-400 uppercase font-bold tracking-wider border-b border-gray-700">Administración</div>
                 
                 <button onclick="cargarContenido('personal')" class="w-full text-left hover:text-green-400 text-sm pl-2 border-l-2 border-transparent hover:border-green-400">👥 Personal y Cuadrillas</button>
+                <div class="pt-4 pb-1 text-xs text-gray-400 uppercase font-bold tracking-wider border-b border-gray-700">Administración</div>
+                
+                <button onclick="cargarContenido('personal')" class="w-full text-left hover:text-green-400 text-sm pl-2 border-l-2 border-transparent hover:border-green-400">👥 Personal y Cuadrillas</button>
+                
+                <!-- NUEVO BOTÓN DE MANDO -->
+                <button onclick="cargarContenido('configuracion')" class="w-full text-left hover:text-yellow-400 text-sm pl-2 border-l-2 border-transparent hover:border-yellow-400 mt-2">🛠️ Configuración de Finca</button>
             </nav>
         </aside>
 
@@ -191,6 +197,40 @@
                 <div id="vista-personal" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">👥 Gestión de Cuadrillas</h2>
                     <p class="text-gray-600">Módulo para administrar trabajadores y asignar tareas.</p>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- HABITACIÓN 5: CONFIGURACIÓN DE FINCA       -->
+                <!-- ========================================== -->
+                <div id="vista-configuracion" class="vista-seccion hidden bg-white p-6 rounded-lg shadow border border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">🛠️ Configuración Maestra de la Finca</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- MÓDULO DE LOTES -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="font-bold text-lg mb-4 text-green-700">Lotes y Sectores Oficiales</h3>
+                            <div class="flex gap-2 mb-4">
+                                <input type="text" id="nuevoLoteInput" placeholder="Ej. Lote 101" class="flex-1 p-2 border border-gray-300 rounded outline-none focus:border-green-500">
+                                <button onclick="guardarLote()" class="bg-green-600 text-white px-4 py-2 rounded font-bold hover:bg-green-700">Añadir</button>
+                            </div>
+                            <ul id="listaLotes" class="space-y-2">
+                                <li class="text-gray-500 text-sm">Cargando lotes...</li>
+                            </ul>
+                        </div>
+
+                        <!-- MÓDULO DE CULTIVOS -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="font-bold text-lg mb-4 text-orange-700">Cultivos Oficiales</h3>
+                            <div class="flex gap-2 mb-4">
+                                <input type="text" id="nuevoCultivoInput" placeholder="Ej. Banano" class="flex-1 p-2 border border-gray-300 rounded outline-none focus:border-orange-500">
+                                <input type="text" id="nuevoIconoInput" placeholder="🍌" class="w-16 p-2 border border-gray-300 rounded outline-none text-center">
+                                <button onclick="guardarCultivo()" class="bg-orange-600 text-white px-4 py-2 rounded font-bold hover:bg-orange-700">Añadir</button>
+                            </div>
+                            <ul id="listaCultivos" class="space-y-2">
+                                <li class="text-gray-500 text-sm">Cargando cultivos...</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -549,7 +589,7 @@
             }
         }
 
-      function cerrarSesion() {
+     function cerrarSesion() {
             localStorage.removeItem('agrotech_token');
             localStorage.removeItem('agrotech_user_id');
             // --- NUEVAS LLAVES A DESTRUIR AL SALIR ---
@@ -558,6 +598,104 @@
             
             window.location.href = 'index.html'; 
         }
+
+        // ==========================================
+        // 🛠️ MOTOR DE CONFIGURACIÓN DE FINCA
+        // ==========================================
+        const orgId = localStorage.getItem('agrotech_org_id');
+
+        // Cargar listas al entrar
+        async function cargarConfiguracionOficial() {
+            try {
+                // Cargar Lotes
+                let resLotes = await fetch(`${SUPABASE_URL}/rest/v1/lotes?organizacion_id=eq.${orgId}&order=creado_en.desc`, { headers: cabeceras });
+                let lotes = await resLotes.json();
+                document.getElementById('listaLotes').innerHTML = lotes.map(l => 
+                    `<li class="flex justify-between bg-white p-2 border rounded shadow-sm">
+                        <span class="font-bold text-gray-700">${l.nombre}</span>
+                        <button onclick="eliminarRegistro('lotes', '${l.id}')" class="text-red-500 hover:text-red-700">❌</button>
+                    </li>`
+                ).join('') || '<li class="text-gray-500 text-sm">No hay lotes registrados.</li>';
+
+                // Cargar Cultivos
+                let resCultivos = await fetch(`${SUPABASE_URL}/rest/v1/cultivos?organizacion_id=eq.${orgId}&order=creado_en.desc`, { headers: cabeceras });
+                let cultivos = await resCultivos.json();
+                document.getElementById('listaCultivos').innerHTML = cultivos.map(c => 
+                    `<li class="flex justify-between bg-white p-2 border rounded shadow-sm">
+                        <span class="font-bold text-gray-700">${c.icono} ${c.nombre}</span>
+                        <button onclick="eliminarRegistro('cultivos', '${c.id}')" class="text-red-500 hover:text-red-700">❌</button>
+                    </li>`
+                ).join('') || '<li class="text-gray-500 text-sm">No hay cultivos registrados.</li>';
+
+            } catch (error) {
+                console.error("Error cargando configuración:", error);
+            }
+        }
+
+        // Guardar nuevo Lote (Solo Admin)
+        async function guardarLote() {
+            const nombre = document.getElementById('nuevoLoteInput').value;
+            if(!nombre) return;
+            
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/lotes`, {
+                    method: 'POST',
+                    headers: cabeceras,
+                    body: JSON.stringify({ nombre: nombre, organizacion_id: orgId })
+                });
+                
+                if (!res.ok) throw new Error("Acceso denegado. Solo administradores pueden crear.");
+                document.getElementById('nuevoLoteInput').value = '';
+                cargarConfiguracionOficial();
+                mostrarMensaje("Lote registrado oficialmente.");
+            } catch (error) {
+                mostrarMensaje(error.message, true);
+            }
+        }
+
+        // Guardar nuevo Cultivo (Solo Admin)
+        async function guardarCultivo() {
+            const nombre = document.getElementById('nuevoCultivoInput').value;
+            const icono = document.getElementById('nuevoIconoInput').value || '🌱';
+            if(!nombre) return;
+            
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/cultivos`, {
+                    method: 'POST',
+                    headers: cabeceras,
+                    body: JSON.stringify({ nombre: nombre, icono: icono, organizacion_id: orgId })
+                });
+                
+                if (!res.ok) throw new Error("Acceso denegado. Solo administradores pueden crear.");
+                document.getElementById('nuevoCultivoInput').value = '';
+                document.getElementById('nuevoIconoInput').value = '';
+                cargarConfiguracionOficial();
+                mostrarMensaje("Cultivo registrado oficialmente.");
+            } catch (error) {
+                mostrarMensaje(error.message, true);
+            }
+        }
+
+        // Eliminar registro
+        async function eliminarRegistro(tabla, id) {
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/${tabla}?id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: cabeceras
+                });
+                if (!res.ok) throw new Error("Acceso denegado.");
+                cargarConfiguracionOficial();
+            } catch (error) {
+                mostrarMensaje(error.message, true);
+            }
+        }
+
+        // Modificamos ligeramente tu función cargarContenido para que lea los datos al abrir la pestaña
+        const originalCargarContenido = cargarContenido;
+        cargarContenido = function(seccion) {
+            originalCargarContenido(seccion);
+            if(seccion === 'configuracion') cargarConfiguracionOficial();
+        };
 
         // Arrancamos la aplicación leyendo la base de datos
         cargarHistorial();
